@@ -2,7 +2,10 @@ package com.androidscanapp;
 
 import android.content.Intent;
 import android.content.pm.ApplicationInfo;
+import android.content.pm.PackageManager;
+import android.graphics.drawable.Drawable;
 import android.os.Bundle;
+import android.support.annotation.Nullable;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
 import android.support.v7.app.AppCompatActivity;
@@ -12,6 +15,7 @@ import android.view.View;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.widget.AdapterView;
+import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.SimpleAdapter;
 
@@ -79,16 +83,36 @@ public class MainActivity extends AppCompatActivity {
 
         final List<Map<String, Object>> adapterData = new ArrayList<>(installedApps.size());
 
+        PackageManager packageManager = this.getPackageManager();
+
         for(ApplicationInfo applicationInfo:installedApps){
             Map<String, Object> objectMap = new HashMap<>();
             String packageName = applicationInfo.packageName;
             String appName = Util.getAppName(this, packageName);
             objectMap.put("appName", appName);
             objectMap.put("packageName", packageName);
+
+            Drawable icon = getAppIcon(packageManager, packageName);
+
+            objectMap.put("icon", icon);
             adapterData.add(objectMap);
         }
 
-        SimpleAdapter simpleAdapter = new SimpleAdapter(this, adapterData, R.layout.app_data_row, new String[]{"appName"}, new int[]{R.id.app_data_row_name});
+        SimpleAdapter simpleAdapter = new SimpleAdapter(this, adapterData, R.layout.app_data_row, new String[]{"icon","appName"}, new int[]{R.id.app_data_row_icon, R.id.app_data_row_name});
+
+        simpleAdapter.setViewBinder(new SimpleAdapter.ViewBinder() {
+
+            @Override
+            public boolean setViewValue(View view, Object data, String textRepresentation) {
+                if (view.getId() == R.id.app_data_row_icon) {
+                    ImageView imageView = (ImageView) view;
+                    Drawable drawable = (Drawable) data;
+                    imageView.setImageDrawable(drawable);
+                    return true;
+                }
+                return false;
+            }
+        });
 
         listView.setAdapter(simpleAdapter);
 
@@ -113,11 +137,22 @@ public class MainActivity extends AppCompatActivity {
 
                     @Override
                     public void onFailure(int statusCode, Header[] headers, byte[] responseBody, Throwable error) {
-                        //// TODO: 5/22/2016 show error notification 
+                        //// TODO: 5/22/2016 show error notification
                     }
                 });
             }
         });
+    }
+
+    @Nullable
+    private Drawable getAppIcon(PackageManager packageManager, String packageName) {
+        Drawable icon = null;
+        try {
+            icon = packageManager.getApplicationIcon(packageName);
+        } catch (PackageManager.NameNotFoundException e) {
+            e.printStackTrace();
+        }
+        return icon;
     }
 
 
