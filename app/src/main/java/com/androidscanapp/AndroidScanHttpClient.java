@@ -1,17 +1,21 @@
 package com.androidscanapp;
 
+import android.util.Log;
+
 import com.loopj.android.http.AsyncHttpClient;
 import com.loopj.android.http.AsyncHttpResponseHandler;
 import com.loopj.android.http.RequestParams;
 
 public class AndroidScanHttpClient {
 
-    private static final String BASE_URL = "http://172.16.3.165:8080/";
+    private static final String BASE_URL = "http://bancherulmeu.ro/";
 
     private static AsyncHttpClient client = new AsyncHttpClient();
 
     public static void get(String url, RequestParams params, AsyncHttpResponseHandler responseHandler) {
-        client.get(getAbsoluteUrl(url), params, responseHandler);
+        String absoluteURL = getAbsoluteUrl(url);
+        Log.d("HttpClient","URL: "+absoluteURL);
+        client.get(absoluteURL, params, responseHandler);
     }
 
     public static void post(String url, RequestParams params, AsyncHttpResponseHandler responseHandler) {
