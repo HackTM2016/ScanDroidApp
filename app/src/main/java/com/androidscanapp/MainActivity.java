@@ -1,5 +1,6 @@
 package com.androidscanapp;
 
+import android.content.pm.ApplicationInfo;
 import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
@@ -8,6 +9,16 @@ import android.support.v7.widget.Toolbar;
 import android.view.View;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.widget.AdapterView;
+import android.widget.ListView;
+import android.widget.SimpleAdapter;
+
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -26,6 +37,8 @@ public class MainActivity extends AppCompatActivity {
                         .setAction("Action", null).show();
             }
         });
+
+        setupListViewWithAllInstalledApps();
     }
 
     @Override
@@ -49,4 +62,37 @@ public class MainActivity extends AppCompatActivity {
 
         return super.onOptionsItemSelected(item);
     }
+
+
+    private void setupListViewWithAllInstalledApps(){
+        ListView listView = (ListView) findViewById(R.id.main_apps_listView);
+
+        List<ApplicationInfo> installedApps = Util.getAllInstalledPackages(this);
+
+        final List<Map<String, Object>> adapterData = new ArrayList<>(installedApps.size());
+
+        for(ApplicationInfo applicationInfo:installedApps){
+            Map<String, Object> objectMap = new HashMap<>();
+            String packageName = applicationInfo.packageName;
+            String appName = Util.getAppName(this, packageName);
+            objectMap.put("appName", appName);
+            objectMap.put("packageName", packageName);
+            adapterData.add(objectMap);
+        }
+
+        SimpleAdapter simpleAdapter = new SimpleAdapter(this, adapterData, R.layout.app_data_row, new String[]{"appName"}, new int[]{R.id.app_data_row_name});
+
+        listView.setAdapter(simpleAdapter);
+
+        listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+            @Override
+            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+                Map<String, Object> item = adapterData.get(position);
+                String packageName = (String) item.get("packageName");
+                AppScanRequester.requestScan(MainActivity.this, packageName);
+            }
+        });
+    }
+
+
 }

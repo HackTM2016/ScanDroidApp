@@ -8,16 +8,21 @@ import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
 import android.net.Uri;
 
-/**
- * Created by Adrian on 5/21/2016.
- */
+import java.util.List;
+
 public class Util {
 
 
-    public static String getAppName(Context context, String packageName) throws PackageManager.NameNotFoundException {
+    public static String getAppName(Context context, String packageName){
         PackageManager pm = context.getPackageManager();
-        ApplicationInfo ai = pm.getApplicationInfo(packageName, PackageManager.GET_META_DATA);
-        return pm.getApplicationLabel(ai).toString();
+        ApplicationInfo ai = null;
+        try {
+            ai = pm.getApplicationInfo(packageName, PackageManager.GET_META_DATA);
+            return pm.getApplicationLabel(ai).toString();
+        } catch (PackageManager.NameNotFoundException e) {
+            e.printStackTrace();
+        }
+        return "";
     }
 
     public static void startApplicationDetailsActivity(Activity activity,String packageName) {
@@ -31,4 +36,13 @@ public class Util {
             e.printStackTrace();
         }
     }
+
+    public static List<ApplicationInfo> getAllInstalledPackages(Context context){
+        final PackageManager pm = context.getPackageManager();
+        //get a list of installed apps.
+        List<ApplicationInfo> packages = pm.getInstalledApplications(PackageManager.GET_META_DATA);
+        return packages;
+    }
+
+
 }
