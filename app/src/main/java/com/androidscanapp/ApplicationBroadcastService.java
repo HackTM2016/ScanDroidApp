@@ -13,6 +13,7 @@ import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
+import android.support.annotation.NonNull;
 import android.support.v4.app.NotificationCompat;
 import android.util.Log;
 
@@ -23,16 +24,12 @@ import com.loopj.android.http.RequestParams;
 import cz.msebera.android.httpclient.Header;
 
 public class ApplicationBroadcastService extends BroadcastReceiver {
+
+    int notificationCounter = 0;
+
     public void onReceive(final Context context, Intent intent) {
         String action = intent.getAction();
-        String packageName = intent.getDataString();
-
-        String[] tokens = packageName.split(":");
-        if (tokens != null && tokens.length == 2){
-            packageName = tokens[1];
-        }
-
-        //packageName = "com.rovio.popcorn";
+        final String packageName = extractPackageName(intent.getDataString());
 
         Log.d("ApplicationBroadcast", "Action: " + action + " package: " + packageName);
 
@@ -44,10 +41,9 @@ public class ApplicationBroadcastService extends BroadcastReceiver {
             PackageInfo packageInfo = context.getPackageManager().getPackageInfo(packageName, 0);
             versionCode = packageInfo.versionCode;
             versionName = packageInfo.versionName;
-            appName = packageInfo.applicationInfo.name;
-            PackageManager pm = context.getPackageManager();
-            ApplicationInfo ai = pm.getApplicationInfo(packageName, PackageManager.GET_META_DATA);
-            appName = pm.getApplicationLabel(ai).toString();
+
+            appName = Util.getAppName(context, packageName);
+
             Log.d("ApplicationBroadcast", "VersionCode: " + versionCode + " VersionName: " + versionName);
         } catch (PackageManager.NameNotFoundException e) {
             Log.d("ApplicationBroadcast","Error getting package version code", e);
@@ -55,7 +51,7 @@ public class ApplicationBroadcastService extends BroadcastReceiver {
 
         final String finalAppName = appName;
 
-        if (!action.contains("PACKAGE_REMOVED")){
+        if (!action.contains("PACKAGE_REMOVED") && !action.contains("PACKAGE_REPLACED")){
             RequestParams params = new RequestParams();
 
             String linkURL = "api/links/packageName/"+packageName;
@@ -70,35 +66,76 @@ public class ApplicationBroadcastService extends BroadcastReceiver {
                     Gson gson = new Gson();
                     LinkData[] links = gson.fromJson(data, LinkData[].class);
                     boolean safe = true;
+
+                    Intent intent = new Intent(context, ScanResultsActivity.class);
+                    intent.putExtra("scan_result", data);
+                    intent.putExtra("packageName", packageName);
+
                     for(LinkData l:links){
-                        if (l.suspect != null && l.suspect.contains("true")){
+                        if (l.id == -2 || l.id == -1){
+                            sendAppNeedsScanWarning(intent, context, finalAppName);
+                            return;
+                        }
+                        if (l.id == -3){
+                            sendScanFailedWarning(intent, context, finalAppName);
+                            return;
+                        }
+                        if (l.suspect){
                             safe = false;
                         }
                         Log.d("ApplicationBroadcast","Link "+l.toString());
                     }
 
-                    safe = true;
-
-                    int icon = safe ? R.drawable.safe : R.drawable.alert;
-
-
-                    Bitmap bitmapIcon = getBitmap(icon, context);
-
-                    String title = finalAppName+" is ";
-                    String titleResult = safe ? "safe" : "not safe!";
-                    title = title + titleResult;
-
-                    String message = "Tap to see more details about "+finalAppName;
-                    sendNotification(context, R.drawable.icon, bitmapIcon, title, message);
+                    showScanResultNotification(safe, intent, context, finalAppName);
                 }
 
                 @Override
                 public void onFailure(int statusCode, Header[] headers, byte[] responseBody, Throwable error) {
                     Log.d("ApplicationBroadcast", "FAILURE! StatusCode: " + statusCode);
-                    sendNotification(context,R.drawable.icon, getBitmap(R.drawable.warning, context), "ScanDroid server has issues.", "Please try to scan the app later.");
+                    Intent intent = new Intent(context, MainActivity.class);
+                    sendNotification(context,R.drawable.icon, getBitmap(R.drawable.warning, context), "ScanDroid server has issues.", "Please try to scan the app later.", intent);
                 }
             });
         }
+    }
+
+
+    private void showScanResultNotification(boolean safe, Intent intent, Context context, String finalAppName) {
+        int icon = safe ? R.drawable.safe : R.drawable.alert;
+
+        Bitmap bitmapIcon = getBitmap(icon, context);
+
+        String title = finalAppName+" is ";
+        String titleResult = safe ? "safe" : "not safe!";
+        title = title + titleResult;
+
+        String message = "Tap to see more details about "+finalAppName;
+
+        sendNotification(context, R.drawable.icon, bitmapIcon, title, message, intent);
+    }
+
+    private void sendAppNeedsScanWarning(Intent intent, Context context, String finalAppName) {
+        int icon = R.drawable.warning;
+        Bitmap bitmapIcon = getBitmap(icon, context);
+        String title = finalAppName+" need scanning";
+        String message = "Please wait for scanning.";
+        sendNotification(context, R.drawable.warning, bitmapIcon, title, message, intent);
+    }
+
+    private void sendScanFailedWarning(Intent intent, Context context, String finalAppName) {
+        int icon = R.drawable.warning;
+        Bitmap bitmapIcon = getBitmap(icon, context);
+        String title = "Failed to scan "+finalAppName;
+        String message = "Scan process failed.";
+        sendNotification(context, R.drawable.warning, bitmapIcon, title, message, intent);
+    }
+
+    private String extractPackageName(String packageName) {
+        String[] tokens = packageName.split(":");
+        if (tokens != null && tokens.length == 2){
+            packageName = tokens[1];
+        }
+        return packageName;
     }
 
     private Bitmap getBitmap(int icon, Context context) {
@@ -107,7 +144,7 @@ public class ApplicationBroadcastService extends BroadcastReceiver {
     }
 
 
-    private void sendNotification(Context context, int drawable,Bitmap icon, String title, String message){
+    private void sendNotification(Context context, int drawable,Bitmap icon, String title, String message,Intent intent){
         Log.d("ApplicationBroadcast", "Sending notification");
         NotificationCompat.Builder mBuilder =
                 new NotificationCompat.Builder(context)
@@ -116,7 +153,7 @@ public class ApplicationBroadcastService extends BroadcastReceiver {
                         .setContentTitle(title)
                         .setContentText(message);
 
-        Intent intent = new Intent(context, ScanResultsActivity.class);
+
 
         TaskStackBuilder stackBuilder = TaskStackBuilder.create(context);
         stackBuilder.addParentStack(ScanResultsActivity.class);
@@ -134,6 +171,6 @@ public class ApplicationBroadcastService extends BroadcastReceiver {
         Notification notification = mBuilder.build();
         notification.flags |= Notification.FLAG_AUTO_CANCEL;
 
-        mNotificationManager.notify(0, notification);
+        mNotificationManager.notify(notificationCounter++, notification);
     }
 }
