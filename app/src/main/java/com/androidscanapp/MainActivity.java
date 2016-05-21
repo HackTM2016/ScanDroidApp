@@ -1,11 +1,13 @@
 package com.androidscanapp;
 
+import android.content.Intent;
 import android.content.pm.ApplicationInfo;
 import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
+import android.util.Log;
 import android.view.View;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -13,12 +15,18 @@ import android.widget.AdapterView;
 import android.widget.ListView;
 import android.widget.SimpleAdapter;
 
+import com.androidscanapp.data.LinkData;
+import com.google.gson.Gson;
+import com.loopj.android.http.AsyncHttpResponseHandler;
+
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+
+import cz.msebera.android.httpclient.Header;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -88,8 +96,26 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
                 Map<String, Object> item = adapterData.get(position);
-                String packageName = (String) item.get("packageName");
-                AppScanRequester.requestScan(MainActivity.this, packageName);
+                final String packageName = (String) item.get("packageName");
+                AppScanRequester.requestScan(MainActivity.this, packageName, new AsyncHttpResponseHandler() {
+                    @Override
+                    public void onSuccess(int statusCode, Header[] headers, byte[] responseBody) {
+                        String data = new String(responseBody);
+
+                        Log.d("ApplicationBroadcast", "StatusCode: " + statusCode + " Responded: " + data);
+
+                        Intent intent = new Intent(MainActivity.this, ScanResultsActivity.class);
+                        intent.putExtra("scan_result", data);
+                        intent.putExtra("packageName", packageName);
+
+                        MainActivity.this.startActivity(intent);
+                    }
+
+                    @Override
+                    public void onFailure(int statusCode, Header[] headers, byte[] responseBody, Throwable error) {
+                        //// TODO: 5/22/2016 show error notification 
+                    }
+                });
             }
         });
     }

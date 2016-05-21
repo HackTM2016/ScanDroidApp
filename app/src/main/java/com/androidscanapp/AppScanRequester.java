@@ -4,12 +4,14 @@ import android.content.Context;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.util.Log;
+
+import com.loopj.android.http.AsyncHttpResponseHandler;
 import com.loopj.android.http.RequestParams;
 
 
 public class AppScanRequester {
 
-        public static void requestScan(final Context context,final String packageName) {
+        public static void requestScan(final Context context,final String packageName, final AsyncHttpResponseHandler requestHandler) {
             int versionCode;
             String versionName;
 
@@ -27,7 +29,7 @@ public class AppScanRequester {
 
             String linkURL = "api/links/packageName/"+packageName;
 
-            AndroidScanHttpClient.get(linkURL, params, new ScanResponseToNotificationsHandler(context, packageName));
+            AndroidScanHttpClient.get(linkURL, params, requestHandler);
 
         }
 }

@@ -26,7 +26,7 @@ public class ApplicationBroadcastService extends BroadcastReceiver {
         Log.d("ApplicationBroadcast", "Action: " + action + " package: " + packageName);
 
         if (!action.contains("PACKAGE_REMOVED") && !action.contains("PACKAGE_REPLACED")) {
-            AppScanRequester.requestScan(context, packageName);
+            AppScanRequester.requestScan(context, packageName, new ScanResponseToNotificationsHandler(context, packageName));
         }
     }
 
