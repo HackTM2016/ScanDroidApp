@@ -26,11 +26,14 @@ import com.google.gson.Gson;
 import com.loopj.android.http.AsyncHttpResponseHandler;
 
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.TreeMap;
 
 import cz.msebera.android.httpclient.Header;
 
@@ -94,7 +97,7 @@ public class MainActivity extends AppCompatActivity {
         SharedPreferences sharedpreferences = this.getApplicationContext().getApplicationContext().getSharedPreferences(Util.STATUS_PREFS_FILE, Context.MODE_PRIVATE);
 
         for(ApplicationInfo applicationInfo:installedApps){
-            Map<String, Object> objectMap = new HashMap<>();
+            Map<String, Object> objectMap = new TreeMap<>();
             String packageName = applicationInfo.packageName;
             String appName = Util.getAppName(this, packageName);
             objectMap.put("appName", appName);
@@ -116,6 +119,8 @@ public class MainActivity extends AppCompatActivity {
 
             adapterData.add(objectMap);
         }
+
+        Collections.sort(adapterData, new MapComparator());
 
         SimpleAdapter simpleAdapter = new SimpleAdapter(this, adapterData, R.layout.app_data_row, new String[]{"icon","appName", "status"}, new int[]{R.id.app_data_row_icon, R.id.app_data_row_name, R.id.app_data_row_status});
 
