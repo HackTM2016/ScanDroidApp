@@ -1,6 +1,8 @@
 package com.androidscanapp;
 
+import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
 import android.graphics.drawable.Drawable;
@@ -49,7 +51,11 @@ public class MainActivity extends AppCompatActivity {
                         .setAction("Action", null).show();
             }
         });
+    }
 
+    @Override
+    public void onResume() {
+        super.onResume();
         setupListViewWithAllInstalledApps();
     }
 
@@ -85,6 +91,8 @@ public class MainActivity extends AppCompatActivity {
 
         PackageManager packageManager = this.getPackageManager();
 
+        SharedPreferences sharedpreferences = this.getApplicationContext().getApplicationContext().getSharedPreferences(Util.STATUS_PREFS_FILE, Context.MODE_PRIVATE);
+
         for(ApplicationInfo applicationInfo:installedApps){
             Map<String, Object> objectMap = new HashMap<>();
             String packageName = applicationInfo.packageName;
@@ -95,10 +103,21 @@ public class MainActivity extends AppCompatActivity {
             Drawable icon = getAppIcon(packageManager, packageName);
 
             objectMap.put("icon", icon);
+
+            int appStatus = sharedpreferences.getInt(packageName, 0);
+
+            switch (appStatus){
+                case 1: objectMap.put("status", "safe"); break;
+                case 2: objectMap.put("status", "warning"); break;
+                case -2: objectMap.put("status", "pending");break;
+                case -3: objectMap.put("status", "scan error");break;
+                default: objectMap.put("status", "unknown");
+            }
+
             adapterData.add(objectMap);
         }
 
-        SimpleAdapter simpleAdapter = new SimpleAdapter(this, adapterData, R.layout.app_data_row, new String[]{"icon","appName"}, new int[]{R.id.app_data_row_icon, R.id.app_data_row_name});
+        SimpleAdapter simpleAdapter = new SimpleAdapter(this, adapterData, R.layout.app_data_row, new String[]{"icon","appName", "status"}, new int[]{R.id.app_data_row_icon, R.id.app_data_row_name, R.id.app_data_row_status});
 
         simpleAdapter.setViewBinder(new SimpleAdapter.ViewBinder() {
 

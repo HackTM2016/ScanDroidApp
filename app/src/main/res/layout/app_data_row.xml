@@ -1,21 +1,85 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:orientation="horizontal" android:layout_width="match_parent"
-    android:layout_height="match_parent">
+    android:layout_height="wrap_content"
+    >
 
     <ImageView
         android:id="@+id/app_data_row_icon"
         android:layout_width="50dp"
         android:layout_height="50dp"
         android:scaleType="fitCenter"
+        android:layout_gravity="center"
+        android:layout_weight="0"
+        android:layout_margin="5dp"
         />
 
-    <TextView
-        android:id="@+id/app_data_row_name"
+    <LinearLayout
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_gravity="center"
-        android:textSize="20sp"
-        android:layout_marginLeft="10dp"
-        android:text="test"/>
+        android:orientation="vertical"
+        android:layout_weight="10"
+        >
+
+        <TextView
+            android:id="@+id/app_data_row_name"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="left"
+            android:textSize="22sp"
+            android:textStyle="bold"
+            android:layout_marginLeft="10dp"
+            android:text="test"/>
+
+        <TextView
+            android:id="@+id/app_data_row_scan_btn"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:background="#5894ef"
+            android:textColor="#ffffff"
+            android:text="SCAN"
+            android:textSize="16dp"
+            android:layout_marginLeft="10dp"
+            android:padding="5dp"
+            />
+
+    </LinearLayout>
+
+
+    <LinearLayout
+        android:layout_width="wrap_content"
+        android:layout_height="match_parent"
+        android:orientation="vertical"
+        android:layout_margin="5dp">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Status"
+            android:textSize="16dp"
+            android:textStyle="bold"/>
+
+        <TextView
+            android:id="@+id/app_data_row_status"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Status"
+            android:textSize="16dp"
+            android:textStyle="bold"/>
+
+        <!--<ImageView-->
+            <!--android:id="@+id/app_data_row_app_icon_status"-->
+            <!--android:layout_width="32dp"-->
+            <!--android:layout_height="32dp"-->
+            <!--android:scaleType="fitCenter"-->
+            <!--android:layout_gravity="center"-->
+            <!--android:layout_weight="0"-->
+            <!--android:layout_margin="5dp"-->
+            <!--/>-->
+
+
+    </LinearLayout>
+
+
+
 </LinearLayout>

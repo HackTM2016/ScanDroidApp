@@ -4,6 +4,7 @@ import android.app.Activity;
 import android.content.ActivityNotFoundException;
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
 import android.net.Uri;
@@ -44,5 +45,6 @@ public class Util {
         return packages;
     }
 
+    public static final String STATUS_PREFS_FILE = "STATUS_PREFS";
 
 }
